@@ -9,8 +9,10 @@ import (
 
 var types []reflect.Type
 
-func Register(v interface{}) {
-	RegisterType(reflect.TypeOf(v))
+func Register(vs ...interface{}) {
+	for _, v := range vs {
+		RegisterType(reflect.TypeOf(v))
+	}
 }
 
 func RegisterType(t reflect.Type) {
@@ -44,6 +46,19 @@ func GenCode() {
 	for _, pkg := range a.Packages {
 		saveCode(
 			filepath.Join(path, pkg.Path),
+			filepath.Base(pkg.Path)+".fastbin.go",
+			genPackage(pkg),
+		)
+	}
+}
+
+func GenCodeWithPath(path string) {
+	a := newAnalyzer()
+	a.Analyze(types)
+
+	for _, pkg := range a.Packages {
+		saveCode(
+			path,
 			filepath.Base(pkg.Path)+".fastbin.go",
 			genPackage(pkg),
 		)

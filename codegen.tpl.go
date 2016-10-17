@@ -7,7 +7,7 @@ var appTemplate = `
 //
 package {{Package}}
 
-import "github.com/funny/binary"
+import "github.com/xxoommd/binary"
 
 {{range .Imports}}
 import "{{.}}"
@@ -19,28 +19,28 @@ import "{{.}}"
 
 {{define "Struct"}}
 
-func (this *{{.Type.Name}}) MarshalBinary() (data []byte, err error) {
-	var buf = binary.Buffer{Data: make([]byte, this.BinarySize())}
-	this.MarshalWriter(&buf)
+func (obj *{{.Type.Name}}) MarshalBinary() (data []byte, err error) {
+	var buf = binary.Buffer{Data: make([]byte, obj.BinarySize())}
+	obj.MarshalWriter(&buf)
 	return buf.Data, nil
 }
 
-func (this *{{.Type.Name}}) UnmarshalBinary(data []byte) error {
-	this.UnmarshalPacket(data)
+func (obj *{{.Type.Name}}) UnmarshalBinary(data []byte) error {
+	obj.UnmarshalPacket(data)
 	return nil
 }
 
-func (this *{{.Type.Name}}) MarshalPacket(p []byte) {
+func (obj *{{.Type.Name}}) MarshalPacket(p []byte) {
 	var buf = binary.Buffer{Data: p}
-	this.MarshalWriter(&buf)
+	obj.MarshalWriter(&buf)
 }
 
-func (this *{{.Type.Name}}) UnmarshalPacket(p []byte) {
+func (obj *{{.Type.Name}}) UnmarshalPacket(p []byte) {
 	var buf = binary.Buffer{Data: p}
-	this.UnmarshalReader(&buf)
+	obj.UnmarshalReader(&buf)
 }
 
-func (this *{{.Type.Name}}) BinarySize() (n int) {
+func (obj *{{.Type.Name}}) BinarySize() (n int) {
 	n = ` + line(`
 	{{range Fields .Type}}
 		{{if IsFixedSize .Type}}
@@ -49,21 +49,21 @@ func (this *{{.Type.Name}}) BinarySize() (n int) {
 	{{end}}0`) + `
 	{{range Fields .Type}}
 		{{if not (IsFixedSize .Type)}}
-			{{template "UnfixedSize" (NewTplType3 (printf "this.%s" .Name) . -1)}}
+			{{template "UnfixedSize" (NewTplType3 (printf "obj.%s" .Name) . -1)}}
 		{{end}}
 	{{end}}
 	return n
 }
 
-func (this *{{.Type.Name}}) MarshalWriter(w binary.BinaryWriter) {
+func (obj *{{.Type.Name}}) MarshalWriter(w binary.BinaryWriter) {
 	{{range Fields .Type}}
-		{{template "Marshal" (NewTplType3 (printf "this.%s" .Name) . -1)}}
+		{{template "Marshal" (NewTplType3 (printf "obj.%s" .Name) . -1)}}
 	{{end}}
 }
 
-func (this *{{.Type.Name}}) UnmarshalReader(r binary.BinaryReader) {
+func (obj *{{.Type.Name}}) UnmarshalReader(r binary.BinaryReader) {
 	{{range Fields .Type}}
-		{{template "Unmarshal" (NewTplType3 (printf "this.%s" .Name) . -1)}}
+		{{template "Unmarshal" (NewTplType3 (printf "obj.%s" .Name) . -1)}}
 	{{end}}
 }
 
@@ -140,7 +140,7 @@ func (this *{{.Type.Name}}) UnmarshalReader(r binary.BinaryReader) {
 			{{template "Marshal" .Elem}}
 		}
 	{{else if .IsPtr}}
-		if {{.Name}} == nil { 
+		if {{.Name}} == nil {
 			w.WriteUint8(0);
 		} else {
 			w.WriteUint8(1);
